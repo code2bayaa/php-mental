@@ -8,16 +8,15 @@ $patientsData = [];
 
 if (isset($_POST['permit']) && isset($_POST['user'])) {
 
-    if ($db->dbConnect()) {
+    $email = $_POST['user'];
 
-        $email = $_POST['user'];
+    $stmt = "SELECT *
+             FROM records
+             WHERE patient = '$email'";
 
-        $stmt = "SELECT *
-                 FROM records
-                 WHERE patient = '$email'";
+    $obtainRecord = $db->getData($stmt);
 
-        $obtainRecord = $db->getData($stmt);
-
+    if($obtainRecord){
         foreach($obtainRecord as $medicalFile){
             $stmt = "SELECT *
                      FROM users
@@ -26,11 +25,11 @@ if (isset($_POST['permit']) && isset($_POST['user'])) {
             $obtainUser = $db->getData($stmt);
 
            $patientsData[] = array(
-                "name" => $obtainUser['Name'],
-                "telephone" => $obtainUser['Telephone'],
-                "age" => $obtainUser['Age'],
-                "image" => $obtainUser['Image'],
-                "email" => $obtainUser['Email'],
+                "name" => $obtainUser[0]['Name'],
+                "telephone" => $obtainUser[0]['Telephone'],
+                "age" => $obtainUser[0]['Age'],
+                "image" => $obtainUser[0]['Image'],
+                "email" => $obtainUser[0]['Email'],
                 "symptoms" => $medicalFile['symptoms'],
                 "height" => $medicalFile['height'],
                 "weight" => $medicalFile['weight'],
@@ -39,9 +38,10 @@ if (isset($_POST['permit']) && isset($_POST['user'])) {
            );
 
         }
-
-        $response = "Success!";
     }
+
+    $response = "Success!";
+
 
 }
     print_r(json_encode(["message" => $response,"data" => $patientsData]));

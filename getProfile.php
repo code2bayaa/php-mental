@@ -8,8 +8,6 @@ $profileData = [];
 
 if (isset($_POST['permit']) && isset($_POST['user'])) {
 
-if ($db->dbConnect()) {
-
     $email = $_POST['user'];
     $stmt = "SELECT *
              FROM users
@@ -25,21 +23,21 @@ if ($db->dbConnect()) {
 
     if ($obtain && $obtainWork){
        $profileData = array(
-            "name" => $obtain['Name'],
-            "email" => $obtain['Email'],
-            "telephone" => $obtain['Telephone'],
-            "age" => $obtain['Age'],
-            "image" => $obtain['Image'],
-            "biography" => $obtainWork['biography'],
-            "w_address" => $obtainWork['wAddress'],
-            "certification" => $obtainWork['certification'],
-            "address" => $obtain['Address']
+            "name" => $obtain[0]['Name'],
+            "email" => $obtain[0]['Email'],
+            "telephone" => $obtain[0]['Telephone'],
+            "age" => $obtain[0]['Age'],
+            "image" => $obtain[0]['Image'],
+            "biography" => $obtainWork[0]['biography'],
+            "w_address" => $obtainWork[0]['wAddress'],
+            "certification" => $obtainWork[0]['certification'],
+            "address" => $obtain[0]['Address']
        );
 
     }
 
     $response = "Success!";
-}
+
 }
 
     print_r(json_encode(["message" => $response,"data" => $profileData]));

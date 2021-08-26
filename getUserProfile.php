@@ -8,26 +8,24 @@ $returnData = [];
 
 if (isset($_POST['permit']) && isset($_POST['user'])) {
 
-    if ($db->dbConnect()) {
+    $email = $_POST['user'];
 
-        $email = $_POST['user'];
+    $stmt = "SELECT * from users where Email = '$email'";
+    $obtain = $db->getData($stmt);
 
-        $stmt = "SELECT * from users where Email = '$email'";
-        $obtain = $db->getData($stmt);
+    if ($obtain){
+       $returnData = array(
+            "name" => $obtain[0]['Name'],
+            "email" => $obtain[0]['Email'],
+            "telephone" => $obtain[0]['Telephone'],
+            "age" => $obtain[0]['Age'],
+            "address" => $obtain[0]['Address'],
+            "image" => $obtain[0]['Image']
+       );
 
-        if ($obtain){
-           $returnData = array(
-                "name" => $obtain['Name'],
-                "email" => $obtain['Email'],
-                "telephone" => $obtain['Telephone'],
-                "age" => $obtain['Age'],
-                "address" => $obtain['Address'],
-                "image" => $obtain['Image']
-           );
-
-        }
-        $response = "Success!";
     }
+    $response = "Success!";
+
 }
 
     print_r(json_encode(["message" => $response,"data" => $returnData]));

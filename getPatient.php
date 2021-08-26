@@ -5,60 +5,58 @@ $db = new DataBase();
 
 $response = "Security breach!";
 $patientData = [];
+$addRecord = [];
 
-if (isset($_POST['email'])) {
-    if ($db->dbConnect()) {
+if (isset($_REQUEST['user'])) {
 
-        $email = $_POST['email'];
-        $stmt = "SELECT *
-                 FROM records
-                 WHERE patient = '$email'";
+    $email = $_REQUEST['user'];
+    $stmt = "SELECT *
+             FROM records
+             WHERE patient = '$email'";
 
-        $obtainRecord = $db->getData($stmt);
+    $obtainRecord = $db->getData($stmt);
 
-        $stmt = "SELECT *
-                 FROM users
-                 WHERE Email = '$email'";
+    $stmt = "SELECT *
+             FROM users
+             WHERE Email = '$email'";
 
-        $obtainUser = $db->getData($stmt);
+    $obtainUser = $db->getData($stmt);
 
-        if ($obtainRecord && $obtainUser){
-           $patientData = array(
-                "info" => array(
-                    "name" => $obtainUser['Name'],
-                    "telephone" => $obtainUser['Telephone'],
-                    "age" => $obtainUser['Age'],
-                    "image" => $obtainUser['Image']
-                )
-           );
-           $addRecord = [];
-           foreach($obtainRecord as $record){
+    //print_r(json_encode(["y" => $obtainRecord,"i" => $obtainUser]));
+    
+    if ($obtainRecord && $obtainUser){
+       $patientData = array(
+                "name" => $obtainUser[0][1],
+                "age" => $obtainUser[0][8],
+                "image" => $obtainUser[0][5]
+       );
 
-                $stmt = "SELECT *
-                         FROM users
-                         WHERE Email = '".$record['doctor']."'";
+       foreach($obtainRecord as $record){
 
-                $obtainDoctor = $db->getData($stmt);
+            $stmt = "SELECT *
+                     FROM users
+                     WHERE Email = '".$record['doctor']."'";
 
-                $addRecord[] = [
-                    "unique" => $record['recordsId'],
-                    "date" => $record['date'],
-                    "analysis" => $record['analysis'],
-                    "medicine" => $record['medicine'],
-                    "sickness" => $record['sickness'],
-                    "symptoms" => $record['symptoms'],
-                    "height" => $record['height'],
-                    "weight" => $record['weight'],
-                    "doctorName" => $obtainDoctor['Name'],
-                    "doctorImage" => $obtainDoctor['Image']
-                ];
-           }
-           $patientData["records"] = $addRecord;
-        }
+            $obtainDoctor = $db->getData($stmt);
 
-        $response = "Success!";
+            $addRecord[] = [
+                "unique" => $record['recordsId'],
+                "date" => $record['date'],
+                "analysis" => $record['analysis'],
+                "medicine" => $record['medicine'],
+                "sickness" => $record['sickness'],
+                "symptoms" => $record['symptoms'],
+                "height" => $record['height'],
+                "weight" => $record['weight'],
+                "doctorName" => $obtainDoctor[0]['Name'],
+                "doctorImage" => $obtainDoctor[0]['Image']
+            ];
+       }
+
+    $response = "Success!";
     }
+
 }
 
-    print_r(json_encode(["message" => $response,"data" => $patientData]));
+    print_r(json_encode(["message" => $response,"info" => $patientData,"records" => $addRecord]));
 ?>

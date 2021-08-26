@@ -3,94 +3,69 @@ require "DataBaseConfig.php";
 
 class DataBase
 {
-    public $connect;
-    public $data;
-    private $sql;
-    private $user;
-    protected $servername;
-    protected $username;
-    protected $password;
-    protected $databasename;
+    private $localhost;
+    private $UserDB;
+    private $Pass;
+    private $DB_name;
+    private $MySQL_CON;
 
-    public function __construct()
-    {
-        $this->connect = null;
-        $this->data = null;
-        $this->sql = null;
-        $this->user = null;
-        $dbc = new DataBaseConfig();
-        $this->servername = $dbc->servername;
-        $this->username = $dbc->username;
-        $this->password = $dbc->password;
-        $this->databasename = $dbc->databasename;
-    }
+	function __construct(){
+		$this->localhost = "localhost";
+		//$this->localhost = "localhost";
+		$this->UserDB = "root";
+		$this->Pass = ""; //Change to name from url
+		$this->DB_name = "mental";
+        $this->MySQL_CON_op = mysqli_connect($this->localhost,$this->UserDB,$this->Pass,$this->DB_name)or trigger_error(mysqli_error($this->MySQL_CON),E_USER_ERROR);
+		//$this->Restriction = ($Restriction)?$Restriction:false;
+		$this->MySQL_CON = $this->connection();
+	}
+	function connection(){
 
-    function dbConnect()
-    {
-        $this->connect = mysqli_connect($this->servername, $this->username, $this->password, $this->databasename);
-        return $this->connect;
-    }
+        try {
+          $conn = new PDO(
+                           "mysql:host=$this->localhost;dbname=$this->DB_name",
+                           $this->UserDB,
+                           $this->Pass,
+                           array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8")
+                         );
+          // set the PDO error mode to exception
+          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            return $conn;
+        } catch(PDOException $e) {
+          return "Connection failed: " . $e->getMessage();
+        }
+	}
 
-    function prepareData($data)
-    {
-        return mysqli_real_escape_string($this->connect, stripslashes(htmlspecialchars($data)));
-    }
 
     function logIn($table, $username, $password)
     {
-        $username = $this->prepareData($username);
-        $password = $this->prepareData($password);
-        $this->sql = "SELECT * from " . $table . " WHERE Email = '" . $username . "' AND Password = '$password'";
-        $result = mysqli_query($this->connect, $this->sql);
-        $row = mysqli_fetch_assoc($result);
-        if (mysqli_num_rows($result) == 1)
-            $login = true;
-        else
-            $login = false;
+        $statement = "SELECT SQL_CALC_FOUND_ROWS * from " . $table . " WHERE Email = '" . $username . "' AND Password = '$password'";
 
-        return $login;
+        $stmt = $this->MySQL_CON->prepare($statement);
+        $stmt->execute();
+
+        if (count($stmt->fetchAll()) == 1){
+            return true;
+        }else
+            return false;
     }
 
-  /*  function signUp($table, $fullname, $email, $Identification, $address, $level, $password, $telephone)
-    {
-        $fullname = $this->prepareData($fullname);
-        $username = $this->prepareData($username);
-        $password = $this->prepareData($password);
-        $Identification = $this->prepareData($Identification);
-        $address = $this->prepareData($address);
-        $level = $this->prepareData($level);
-        $email = $this->prepareData($email);
-        $telephone = $this->prepareData($telephone);
-        $password = password_hash($password, PASSWORD_DEFAULT);
-        $this->sql =
-            "INSERT INTO " . $table . " (fullname, email, Identification, address, level, password, telephone) VALUES ('" . $fullname . "','" . $email . "','" . $Identification . "','" . $address . "','" . $level . "','" . $password . "','" . $telephone . "')";
-        if (mysqli_query($this->connect, $this->sql)) {
-            return true;
-        } else return false;
-    }*/
     function getData($statement)
     {
-        $this->sql = $statement;
+        $stmt = $this->MySQL_CON->prepare($statement);
+        $stmt->execute();
+        $data = $stmt->fetchAll();
 
-        $result = mysqli_query($this->connect, $this->sql);
-        $row = mysqli_fetch_assoc($result);
-        if (mysqli_num_rows($result) > 0){
-            if(mysqli_num_rows($result) == 1)
-                return $row;
-            else{
-                $pot = [];
-                while($row = mysqli_fetch_assoc($result)){
-                    array_push($pot,$row);
-                }
-                return $pot;
-            }
-        }else
+        if (count($data) > 0)
+            return $data;
+        else
             return false;
     }
     function updateData($statement)
     {
-	    $PartQuery = mysqli_query($this->connect, $statement);
-        if($PartQuery)
+        $stmt = $this->MySQL_CON->prepare($statement);
+
+        if($stmt->execute())
             return true;
         else
             return false;
@@ -109,7 +84,7 @@ class DataBase
                 $statementTwo .= "VALUES (";
             }
             $statementOne .= $k;
-            $statementTwo .= "'".$this->prepareData($v)."'";
+            $statementTwo .= "'".$v."'";
             if($r !== ($fin - 1)){
                 $statementOne .= ",";
                 $statementTwo .= ",";
@@ -122,8 +97,8 @@ class DataBase
 
         $statement = "INSERT INTO " .$table. "".$statementOne. "".$statementTwo;
 
-	    $PartQuery = mysqli_query($this->connect, $statement);
-        if($PartQuery)
+        $stmt = $this->MySQL_CON->prepare($statement);
+        if($stmt->execute())
             return true;
         else
             return false;
